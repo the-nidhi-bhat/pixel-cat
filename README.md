@@ -1,15 +1,17 @@
-# Pixel Cat
+# Pixel Cat Site
 
-Pixel Cat is a browser-first prototype for a future Tauri or Electron desktop companion. It includes a pixel-art cat state machine, a state simulator, local settings persistence, live palette swapping, a Pomodoro focus loop, and gentle in-app stretch reminders.
+A cozy, fast marketing site for Pixel Cat, a tiny desktop companion for focused humans. This is a static Next.js App Router site with playful simulated states, coat previews, responsive sections, and a clearly marked placeholder release link.
 
-## Run locally
+## Local setup
+
+Requirements: Node.js 20+ and pnpm.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000`.
+Open http://localhost:3000.
 
 ## Production build
 
@@ -18,14 +20,22 @@ pnpm build
 pnpm start
 ```
 
-## Desktop shell roadmap
+No environment variables are required. The site does not call an external API or store user data.
 
-The current app intentionally keeps OS-level behavior behind a clean simulation boundary. A Tauri/Electron wrapper can later replace the simulator with a transparent always-on-top window, tray menu, global mouse/keyboard/scroll hooks, platform permission explainers, and signed installers. No telemetry or external data service is required; settings are stored in the browser's local storage for this prototype.
+## Release downloads
 
-## Status interface
+The macOS and Windows buttons currently point to the placeholder URL below. Replace `your-github-username` after creating the repository and publishing signed desktop builds:
 
-The state machine is represented by `CatState` and `trigger()` in `components/pixel-cat-app.tsx`. A future desktop shell or local file/socket adapter can call the same state transition boundary to report `working`, `idle`, `away`, or `break` without coupling Pixel Cat to a specific coding tool.
+`https://github.com/your-github-username/pixel-cat-site/releases/latest`
 
-## GitHub
+There are no image or GIF placeholders in the current site; the mascot is rendered with lightweight CSS. If you add media later, label it in the UI and README as `PLACEHOLDER` until replaced.
 
-Create a private repository named `pixel-cat` and connect this project through the v0 GitHub settings. The connected GitHub credential in this environment is read-only, so repository creation cannot be completed automatically here.
+## Project structure
+
+- `app/page.tsx` — page entry
+- `components/pixel-cat-landing.tsx` — interactive marketing sections
+- `app/globals.css` — responsive Chummi visual system and animations
+
+## Desktop app roadmap
+
+The marketing site intentionally stays static while the future Tauri/Electron app handles transparent overlays, tray controls, global activity hooks, signed builds, and local settings.

@@ -43,7 +43,7 @@ button { font: inherit; }
 @media (max-width:760px) { .utility-grid { grid-template-columns:1fr; }.palette-grid { grid-template-columns:repeat(2,1fr); } }
 
 /* Pixel Cat marketing site */
-.landing-shell { --ink:#25252b; --paper:#f7f4ec; --line:#ddd8c9; --gold:#e9a43b; --soft:#efe6d2; background:var(--paper); color:var(--ink); overflow:hidden; }
+.landing-shell { --ink:#403842; --paper:#fff8f1; --line:#f0d9d1; --gold:#e9a05f; --soft:#f9e8df; --mint:#dcefe4; background:var(--paper); color:var(--ink); overflow:hidden; }
 .landing-nav { max-width:1180px; margin:auto; padding:28px 32px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
 .landing-logo { display:flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; font-weight:800; letter-spacing:-.04em; font-size:18px; }.landing-logo small { display:block; color:#989286; text-transform:uppercase; letter-spacing:.13em; font-size:8px; font-weight:700; margin-top:3px; }.logo-mark { display:grid; place-items:center; width:32px; height:32px; background:var(--ink); color:var(--paper); border-radius:9px; transform:rotate(-10deg); font-size:24px; }
 .landing-links { display:flex; gap:28px; }.landing-links a,.landing-footer a { color:#716e67; text-decoration:none; font-size:12px; }.landing-links a:hover,.landing-footer a:hover { color:var(--ink); }.nav-cta,.primary-cta { display:inline-flex; align-items:center; gap:8px; border-radius:7px; background:var(--ink); color:var(--paper); text-decoration:none; font-size:12px; font-weight:700; padding:12px 16px; }.nav-cta svg,.primary-cta svg,.text-cta svg { width:15px; }
@@ -56,3 +56,31 @@ button { font: inherit; }
 @keyframes landing-bob { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-8px) } }
 @media (max-width:800px) { .landing-nav { padding:20px; }.landing-links { display:none; }.landing-hero,.customize-section { grid-template-columns:1fr; gap:45px; padding:70px 20px 85px; }.hero-visual { min-height:350px; }.feature-section,.move-section,.customize-section,.download-section { padding:75px 20px; }.feature-grid,.state-strip { grid-template-columns:1fr 1fr; }.section-heading,.download-section,.landing-footer { align-items:flex-start; flex-direction:column; }.download-card { width:100%; max-width:390px; }.landing-footer>div { flex-wrap:wrap; }.customize-stage { min-height:320px; } }
 @media (max-width:480px) { .nav-cta { display:none; }.hero-copy h1 { font-size:47px; }.feature-grid,.state-strip { grid-template-columns:1fr; }.platform-note { flex-wrap:wrap; }.state-stage { height:170px; } }
+
+/* Chummi polish: soft, warm, playful, and intentionally light */
+.landing-shell { font-family: Arial, sans-serif; }
+.landing-nav { padding-top:22px; padding-bottom:22px; }
+.logo-mark { border-radius:12px; background:#403842; box-shadow:4px 4px 0 #f0cbbf; }
+.nav-cta,.primary-cta { border-radius:999px; background:#403842; box-shadow:0 5px 0 #dec5bb; transition:transform .2s ease, box-shadow .2s ease; }
+.nav-cta:hover,.primary-cta:hover { transform:translateY(-2px); box-shadow:0 7px 0 #dec5bb; }
+.text-cta { border-radius:999px; padding:11px 14px; background:#faebe4; transition:transform .2s ease, background .2s ease; }
+.text-cta:hover { transform:translateY(-2px); background:#f5ddd5; }
+.hero-visual { background:#f8ded2; border-radius:30px; box-shadow:12px 14px 0 #f0cfc4; }
+.hero-spark { color:#d78378; }
+.feature-card,.state-tile,.download-card { border-radius:20px; transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.feature-card:hover { transform:translateY(-5px) rotate(-.4deg); box-shadow:0 12px 0 #f4dfd8; border-color:#e8bbb0; }
+.feature-icon,.download-icon { border-radius:12px; background:#fae8df; color:#c8796d; }
+.move-section { background:#403842; }
+.state-tile:hover { transform:translateY(-3px); }
+.state-tile.active { border-color:#efb19a; box-shadow:0 0 0 3px #efb19a33; }
+.state-stage { background:#514850; }
+.coat-picker button { border-radius:999px; transition:transform .18s ease, background .18s ease; }
+.coat-picker button:hover { transform:scale(1.12) rotate(5deg); background:#fff3ee; }
+.coat-picker button.chosen { border-color:#d78378; box-shadow:0 0 0 4px #f4d6cd; }
+.customize-stage { border-radius:28px; background:#e5f1e5; box-shadow:12px 14px 0 #cfe3d3; }
+.download-section { background:#f7e4c9; }
+.download-button,.windows-button { border-radius:999px; text-decoration:none; transition:transform .2s ease, filter .2s ease; }
+.download-button:hover,.windows-button:hover { transform:translateY(-2px); filter:brightness(1.04); }
+.windows-button { background:#fff3e8; }
+.landing-footer { border-top:1px solid #f0d9d1; }
+.landing-footer a { transition:color .18s ease; }
