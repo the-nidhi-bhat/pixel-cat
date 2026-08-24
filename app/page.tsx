@@ -1,5 +1,5 @@
-import PixelCatApp from '@/components/pixel-cat-app'
+import PixelCatLanding from '@/components/pixel-cat-landing'
 
 export default function Page() {
-  return <PixelCatApp />
+  return <PixelCatLanding />
 }
