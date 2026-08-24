@@ -1,65 +1,55 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { Bell, Check, ChevronRight, CircleHelp, Cloud, Coffee, Command, Eye, Gauge, Keyboard, Moon, MousePointer2, Palette, Play, RotateCcw, Save, Settings2, Sparkles, Sun, Volume2, Zap } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Bell, Check, ChevronRight, CircleHelp, Cloud, Coffee, Eye, Gauge, Keyboard, Moon, MousePointer2, Palette, Play, RotateCcw, Save, Settings2, Sparkles, Sun, Volume2, Zap } from 'lucide-react'
 
-const modes = [
-  { id: 'focused', label: 'Focused', description: 'Quietly keeping you company', icon: Zap, color: 'amber' },
+type CatState = 'idle' | 'walk' | 'curious' | 'typing-alert' | 'sleep' | 'focus' | 'break' | 'stretch-reminder'
+
+const states: { id: CatState; label: string; description: string; icon: typeof Zap; color: string }[] = [
   { id: 'idle', label: 'Idle', description: 'Taking a tiny stretch break', icon: Sun, color: 'sky' },
-  { id: 'away', label: 'Away', description: 'Waiting patiently for you', icon: Cloud, color: 'violet' },
-  { id: 'sleeping', label: 'Sleeping', description: 'Dreaming of laser pointers', icon: Moon, color: 'indigo' },
-] as const
+  { id: 'walk', label: 'Walk', description: 'Wandering across your desktop', icon: MousePointer2, color: 'amber' },
+  { id: 'curious', label: 'Curious', description: 'Watching where your cursor goes', icon: Eye, color: 'violet' },
+  { id: 'typing-alert', label: 'Typing alert', description: 'Cheering on your keyboard sprint', icon: Keyboard, color: 'rose' },
+  { id: 'sleep', label: 'Sleep', description: 'Dreaming of laser pointers', icon: Moon, color: 'indigo' },
+  { id: 'focus', label: 'Focus', description: 'Quietly keeping you company', icon: Zap, color: 'amber' },
+  { id: 'break', label: 'Break', description: 'A well-earned little pause', icon: Coffee, color: 'sky' },
+  { id: 'stretch-reminder', label: 'Stretch reminder', description: 'Time to reset your shoulders', icon: Bell, color: 'rose' },
+]
+const palettes = { amber: ['#e7a84c', '#6c4b2a', '#9e5942'], cream: ['#e8dfc9', '#5f5b50', '#a88c65'], pink: ['#e89aa6', '#653f4c', '#ae5368'], mint: ['#9bc9ae', '#3e5d4b', '#558c6c'] }
+type PaletteName = keyof typeof palettes
+const defaults = { state: 'focus' as CatState, enabled: true, sound: true, workMinutes: 25, breakMinutes: 5, stretchMinutes: 45, reminders: true, palette: 'amber' as PaletteName }
 
 export default function PixelCatApp() {
   const [activeNav, setActiveNav] = useState('Cat behavior')
-  const [mode, setMode] = useState<(typeof modes)[number]['id']>('focused')
-  const [enabled, setEnabled] = useState(true)
-  const [sound, setSound] = useState(true)
+  const [settings, setSettings] = useState(defaults)
   const [saved, setSaved] = useState(true)
+  const [seconds, setSeconds] = useState(defaults.workMinutes * 60)
+  const [timerRunning, setTimerRunning] = useState(false)
+  const [timerMode, setTimerMode] = useState<'work' | 'break'>('work')
+  const [showReminder, setShowReminder] = useState(false)
+  const [cursorMoved, setCursorMoved] = useState(false)
 
-  const current = useMemo(() => modes.find((item) => item.id === mode) ?? modes[0], [mode])
+  useEffect(() => { try { const stored = window.localStorage.getItem('pixel-cat-settings'); if (stored) setSettings({ ...defaults, ...JSON.parse(stored) }) } catch {} }, [])
+  useEffect(() => { if (!timerRunning) return; const id = window.setInterval(() => setSeconds((s) => { if (s <= 1) { const next = timerMode === 'work' ? 'break' : 'work'; setTimerMode(next); setSettings((x) => ({ ...x, state: next === 'break' ? 'break' : 'focus' })); return (next === 'work' ? settings.workMinutes : settings.breakMinutes) * 60 } return s - 1 }), 1000); return () => window.clearInterval(id) }, [timerRunning, timerMode, settings.workMinutes, settings.breakMinutes])
+  useEffect(() => { if (!settings.reminders || settings.stretchMinutes < 1) return; const id = window.setTimeout(() => { setShowReminder(true); setSettings((x) => ({ ...x, state: 'stretch-reminder' })) }, settings.stretchMinutes * 60 * 1000); return () => window.clearTimeout(id) }, [settings.reminders, settings.stretchMinutes])
+  const current = useMemo(() => states.find((item) => item.id === settings.state) ?? states[5], [settings.state])
   const CurrentIcon = current.icon
+  const colors = palettes[settings.palette]
+  const update = (patch: Partial<typeof settings>) => { setSettings((x) => ({ ...x, ...patch })); setSaved(false) }
+  const save = () => { window.localStorage.setItem('pixel-cat-settings', JSON.stringify(settings)); setSaved(true) }
+  const reset = () => { setSettings(defaults); setSeconds(defaults.workMinutes * 60); setTimerMode('work'); setTimerRunning(false); window.localStorage.removeItem('pixel-cat-settings'); setSaved(true) }
+  const formatTime = (n: number) => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`
+  const trigger = (state: CatState) => update({ state })
 
-  function chooseMode(nextMode: typeof mode) {
-    setMode(nextMode)
-    setSaved(false)
-  }
-
-  return (
-    <main className="pixel-shell">
-      <header className="topbar">
-        <div className="brand-lockup"><div className="brand-cat">◒</div><div><strong>pixel cat</strong><span>desktop companion</span></div></div>
-        <div className="topbar-actions"><span className="sync-pill"><span className="live-dot" /> all systems cozy</span><button className="icon-button" aria-label="Help"><CircleHelp /></button><button className="avatar" aria-label="Open profile">N</button></div>
-      </header>
-
-      <div className="app-body">
-        <aside className="sidebar">
-          <div className="sidebar-label">workspace</div>
-          <nav aria-label="Settings navigation">
-            {[['Cat behavior', Eye], ['Appearance', Palette], ['Sounds', Volume2], ['Keyboard', Keyboard]].map(([label, Icon]) => (
-              <button key={label as string} onClick={() => setActiveNav(label as string)} className={`nav-item ${activeNav === label ? 'active' : ''}`}><Icon /><span>{label as string}</span>{activeNav === label && <ChevronRight className="nav-arrow" />}</button>
-            ))}
-          </nav>
-          <div className="sidebar-bottom"><div className="native-card"><div className="native-icon"><Settings2 /></div><div><strong>Native mode</strong><span>coming soon</span></div><span className="mini-dot" /></div><button className="nav-item muted"><CircleHelp /><span>About pixel cat</span></button></div>
-        </aside>
-
-        <section className="content">
-          <div className="content-heading"><div><p className="eyebrow">settings / {activeNav.toLowerCase()}</p><h1>{activeNav}</h1><p className="lede">Tune how your little desktop companion shows up throughout the day.</p></div><div className="save-state">{saved ? <><Check /> Saved</> : <><span className="unsaved-dot" /> Unsaved changes</>}</div></div>
-
-          {activeNav === 'Cat behavior' ? <>
-            <section className="hero-card">
-              <div className="preview-stage"><div className="stage-grid" /><div className={`cat-sprite cat-${mode}`}><div className="cat-ears" /><div className="cat-face"><span className="eye left" /><span className="eye right" /><span className="nose" /></div><div className="cat-body" /><div className="cat-tail" /></div><div className="stage-shadow" /><div className="status-chip"><CurrentIcon /><span>{current.label}</span></div></div>
-              <div className="preview-copy"><span className="section-kicker">live preview</span><h2>Your cat is <em>{current.label.toLowerCase()}</em></h2><p>{current.description}. This is a simulation of the companion state; native activity sensing will connect here in a future desktop build.</p><div className="preview-meta"><span><Gauge /> 72% cozy</span><span><MousePointer2 /> watching cursor</span></div></div>
-            </section>
-
-            <section className="settings-section"><div className="section-title"><div><span className="section-kicker">activity states</span><h2>What should your cat do?</h2></div><span className="count-label">{modes.length} states</span></div><div className="mode-grid">{modes.map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => chooseMode(item.id)} className={`mode-card ${mode === item.id ? 'selected' : ''}`}><div className={`mode-icon ${item.color}`}><Icon /></div><div><strong>{item.label}</strong><span>{item.description}</span></div>{mode === item.id && <span className="selected-check"><Check /></span>}</button> })}</div></section>
-
-            <section className="settings-section toggles"><div className="section-title"><div><span className="section-kicker">preferences</span><h2>Keep it comfortable</h2></div></div><div className="toggle-row"><div className="row-icon"><Bell /></div><div className="row-copy"><strong>Show pixel cat</strong><span>Let your companion appear while you work</span></div><button className={`switch ${enabled ? 'on' : ''}`} onClick={() => { setEnabled(!enabled); setSaved(false) }} aria-label="Toggle show pixel cat"><span /></button></div><div className="toggle-row"><div className="row-icon"><Volume2 /></div><div className="row-copy"><strong>Soft notification sounds</strong><span>Play a tiny sound when your cat changes mood</span></div><button className={`switch ${sound ? 'on' : ''}`} onClick={() => { setSound(!sound); setSaved(false) }} aria-label="Toggle notification sounds"><span /></button></div></section>
-
-            <footer className="content-footer"><button className="reset-button" onClick={() => { setMode('focused'); setEnabled(true); setSound(true); setSaved(true) }}><RotateCcw /> Reset defaults</button><button className="save-button" onClick={() => setSaved(true)}><Save /> Save changes</button></footer>
-          </> : <div className="empty-panel"><div className="empty-icon"><Sparkles /></div><h2>{activeNav} controls are cozying up</h2><p>These settings are part of the Pixel Cat desktop companion roadmap. Cat behavior simulation is ready to explore now.</p><button className="save-button" onClick={() => setActiveNav('Cat behavior')}><Play /> See simulation</button></div>}
-        </section>
-      </div>
+  return <main className="pixel-shell" onMouseMove={() => { if (!cursorMoved) { setCursorMoved(true); if (settings.state === 'idle') update({ state: 'curious' }) } }}>
+    <header className="topbar"><div className="brand-lockup"><div className="brand-cat">◒</div><div><strong>pixel cat</strong><span>desktop companion</span></div></div><div className="topbar-actions"><span className="sync-pill"><span className="live-dot" /> simulation live</span><button className="icon-button" aria-label="Help"><CircleHelp /></button><button className="avatar" aria-label="Open profile">N</button></div></header>
+    <div className="app-body"><aside className="sidebar"><div className="sidebar-label">workspace</div><nav aria-label="Settings navigation">{[['Cat behavior', Eye], ['Appearance', Palette], ['Sounds', Volume2], ['Keyboard', Keyboard]].map(([label, Icon]) => <button key={label as string} onClick={() => setActiveNav(label as string)} className={`nav-item ${activeNav === label ? 'active' : ''}`}><Icon /><span>{label as string}</span>{activeNav === label && <ChevronRight className="nav-arrow" />}</button>)}</nav><div className="sidebar-bottom"><div className="native-card"><div className="native-icon"><Settings2 /></div><div><strong>Native mode</strong><span>Tauri / Electron ready</span></div><span className="mini-dot" /></div><button className="nav-item muted"><CircleHelp /><span>About pixel cat</span></button></div></aside>
+      <section className="content"><div className="content-heading"><div><p className="eyebrow">settings / {activeNav.toLowerCase()}</p><h1>{activeNav}</h1><p className="lede">Tune how your little desktop companion shows up throughout the day.</p></div><div className="save-state">{saved ? <><Check /> Saved locally</> : <><span className="unsaved-dot" /> Unsaved changes</>}</div></div>
+        {activeNav === 'Cat behavior' ? <><section className="hero-card"><div className="preview-stage" style={{ ['--cat-color' as string]: colors[0], ['--cat-outline' as string]: colors[1], ['--cat-nose' as string]: colors[2] }}><div className="stage-grid" /><div className={`cat-sprite cat-${settings.state}`} aria-label={`Pixel cat is ${current.label}`}><div className="cat-ears" /><div className="cat-face"><span className="eye left" /><span className="eye right" /><span className="nose" /></div><div className="cat-body" /><div className="cat-tail" /></div><div className="stage-shadow" /><div className="status-chip"><CurrentIcon /><span>{settings.enabled ? current.label : 'Hidden'}</span></div></div><div className="preview-copy"><span className="section-kicker">live preview</span><h2>Your cat is <em>{current.label.toLowerCase()}</em></h2><p>{current.description}. Move your cursor in this preview or use the simulator below to test every desktop behavior.</p><div className="preview-meta"><span><Gauge /> {settings.enabled ? '72% cozy' : 'paused'}</span><span><MousePointer2 /> {cursorMoved ? 'cursor noticed' : 'watching cursor'}</span></div></div></section>
+          <section className="settings-section"><div className="section-title"><div><span className="section-kicker">state simulator</span><h2>What should your cat do?</h2></div><span className="count-label">{states.length} states</span></div><div className="mode-grid">{states.map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => trigger(item.id)} className={`mode-card ${settings.state === item.id ? 'selected' : ''}`}><div className={`mode-icon ${item.color}`}><Icon /></div><div><strong>{item.label}</strong><span>{item.description}</span></div>{settings.state === item.id && <span className="selected-check"><Check /></span>}</button> })}</div></section>
+          <section className="settings-section utility-grid"><div className="timer-card"><div className="section-title"><div><span className="section-kicker">focus loop</span><h2>{timerMode === 'work' ? 'Pomodoro timer' : 'Break timer'}</h2></div><span className="timer-readout">{formatTime(seconds)}</span></div><div className="timer-actions"><button className="save-button" onClick={() => setTimerRunning(!timerRunning)}><Play /> {timerRunning ? 'Pause' : 'Start'} {timerMode}</button><button className="reset-button" onClick={() => { setTimerRunning(false); setTimerMode('work'); setSeconds(settings.workMinutes * 60); trigger('focus') }}><RotateCcw /> Reset</button></div><div className="number-row"><label>Work <input type="number" min="1" max="120" value={settings.workMinutes} onChange={(e) => update({ workMinutes: Number(e.target.value) || 1 })} /></label><label>Break <input type="number" min="1" max="60" value={settings.breakMinutes} onChange={(e) => update({ breakMinutes: Number(e.target.value) || 1 })} /></label></div></div><div className="timer-card"><div className="section-title"><div><span className="section-kicker">body check</span><h2>Stretch reminder</h2></div><button className={`switch ${settings.reminders ? 'on' : ''}`} onClick={() => update({ reminders: !settings.reminders })} aria-label="Toggle stretch reminders"><span /></button></div><p className="card-note">A gentle in-app nudge, never a browser notification.</p><label className="number-label">Every <input type="number" min="1" max="240" value={settings.stretchMinutes} onChange={(e) => update({ stretchMinutes: Number(e.target.value) || 1 })} /> minutes</label></div></section>
+          <section className="settings-section toggles"><div className="section-title"><div><span className="section-kicker">preferences</span><h2>Keep it comfortable</h2></div></div><div className="toggle-row"><div className="row-icon"><Bell /></div><div className="row-copy"><strong>Show pixel cat</strong><span>Let your companion appear while you work</span></div><button className={`switch ${settings.enabled ? 'on' : ''}`} onClick={() => update({ enabled: !settings.enabled })} aria-label="Toggle show pixel cat"><span /></button></div><div className="toggle-row"><div className="row-icon"><Volume2 /></div><div className="row-copy"><strong>Soft notification sounds</strong><span>Play a tiny sound when your cat changes mood</span></div><button className={`switch ${settings.sound ? 'on' : ''}`} onClick={() => update({ sound: !settings.sound })} aria-label="Toggle notification sounds"><span /></button></div></section><footer className="content-footer"><button className="reset-button" onClick={reset}><RotateCcw /> Reset defaults</button><button className="save-button" onClick={save}><Save /> Save changes</button></footer>
+        </> : activeNav === 'Appearance' ? <section className="settings-section appearance-panel"><div className="section-title"><div><span className="section-kicker">palette swap</span><h2>Choose your cat&apos;s coat</h2></div></div><div className="palette-grid">{(Object.keys(palettes) as PaletteName[]).map((name) => <button key={name} className={`palette-option ${settings.palette === name ? 'selected' : ''}`} onClick={() => update({ palette: name })}><span style={{ background: palettes[name][0] }} /><strong>{name}</strong>{settings.palette === name && <Check />}</button>)}</div><p className="card-note">Limited-palette recoloring is applied live and saved on this device.</p></section> : <div className="empty-panel"><div className="empty-icon"><Sparkles /></div><h2>{activeNav} controls are cozying up</h2><p>These settings are ready for the desktop shell. The browser simulator already provides the hooks for real keyboard, tray, and overlay integrations.</p><button className="save-button" onClick={() => setActiveNav('Cat behavior')}><Play /> See simulation</button></div>}
+      </section></div>{showReminder && <div className="reminder-modal" role="dialog" aria-modal="true"><div className="reminder-card"><span className="section-kicker">pixel cat says</span><h2>Stretch break?</h2><p>Your shoulders have been working hard. Take a tiny reset with your companion.</p><div className="timer-actions"><button className="save-button" onClick={() => { setShowReminder(false); trigger('stretch-reminder') }}>Stretch with cat</button><button className="reset-button" onClick={() => setShowReminder(false)}>Snooze</button></div></div></div>}
     </main>
-  )
 }
